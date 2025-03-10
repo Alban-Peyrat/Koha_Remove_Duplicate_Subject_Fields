@@ -132,13 +132,14 @@ def dedupe_field(record:pymarc.record.Record, tag:str, index:int=None, bibnb:int
             LOG.record_message(Level.WARNING, index, bibnb, msg=f"Field without authority ID : {marc_utils.field_as_string(field)}")
             fields.append(field)
             continue
-        # For info purpose, checks if multiple $9, as this should not be the case
+        # For info purpose, checks if multiple $9
+        # RAMEAU terms might have multiple $9 ($a-$x), with different combination possible
         if len(field.get_subfields("9")) > 1:
             ERRORS_FILE.write(Error_Types.WARNING_MULTIPLE_AUTHORITY_ID_IN_ONE_FIELD, index=index, bibnb=bibnb, msg=marc_utils.field_as_string(field))
             LOG.record_message(Level.WARNING, index, bibnb, msg=f"Field has multiple authority ID : {marc_utils.field_as_string(field)}")
         # Checks if this ID was already met
         # If yes, log an info + report & don't add the field to the list
-        auth_id = field.get("9")
+        auth_id = "-".join(field.get_subfields("9"))
         if auth_id in auth_id_index:
             LOG.record_message(Level.INFO, index, bibnb, msg=f"Deduping on authority ID {auth_id} : {marc_utils.field_as_string(field)}")
             DELETED_FIELD_FILE.write(bibnb, index, tag, auth_id, field)
