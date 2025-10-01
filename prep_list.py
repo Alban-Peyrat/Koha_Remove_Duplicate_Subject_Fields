@@ -14,7 +14,11 @@ FILE_OUT = os.getenv("PREP_LIST_OUTPUT_FILE")
 
 class Bibnb(object):
     def __init__(self, row:dict) -> None:
-        self.bibnb:str = row["biblionumber"]
+        # typical "It worked but now Koha updated and some obscure stuff is happening now" situation
+        if not "biblionumber" in row:
+            self.bibnb:str = row["\ufeffbiblionumber"]
+        else:
+            self.bibnb:str = row["biblionumber"]
         self.input_ids:str = row["subfield"]
         self.id_list = self.input_ids.split()
         self.id_dict = {}

@@ -9,6 +9,13 @@ SQL report example :
 
 <!-- report ID 1500 -->
 
+<!-- 
+Pour les champs venant ud Sudoc, on peut exclure le snotices qui contiendrait des subdivisions
+WHERE ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="y"])')) = 0
+	AND ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="x"])')) = 0
+
+ -->
+
 ```SQL
 SELECT biblionumber,
     ExtractValue(metadata, CONCAT('//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="', TRIM(<<Subfield Code>>), '"]')) AS subfield
