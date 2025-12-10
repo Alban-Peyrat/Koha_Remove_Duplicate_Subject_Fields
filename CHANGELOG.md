@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+* Changed behaviour when encountering a field sharing the sa ID as a stored field :
+  * If stored field has no PPN but the new field has PPNs, keeps the new field
+  * If both stored field & new field has PPN, keep the field the closest of having the same number of `$9` & `PPN`. If both have the same number, keep the first field
+  * If neither has PPN, keep the stored field
+
 ### Fixed
 
 * `prep_list.py` now properly deals with Koha's CSV BOM
