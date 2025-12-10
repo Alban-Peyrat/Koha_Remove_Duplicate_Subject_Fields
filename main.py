@@ -94,18 +94,19 @@ class Report_Deleted_Fields_File(object):
     def __init__(self, file_path:str) -> None:
         self.path = file_path
         self.file = open(self.path, "w", newline="", encoding='utf-8')
-        self.headers = ["bibnb", "index", "tag", "auth_id", "field"]
+        self.headers = ["bibnb", "index", "tag", "auth_id", "field", "replaced_by"]
         self.writer = csv.DictWriter(self.file, extrasaction="ignore", fieldnames=self.headers, delimiter=";")
         self.writer.writeheader()
 
-    def write(self, bibnb:int, index:int, tag:str, auth_id:str, field:str):
+    def write(self, bibnb:int, index:int, tag:str, auth_id:str, field:pymarc.field.Field, replaced_by:pymarc.field.Field):
         # Use str to prevent crash if I'm stupid when coding
         self.writer.writerow({
             "bibnb":str(bibnb),
             "index":str(index),
             "tag":str(tag),
             "auth_id":str(auth_id),
-            "field":str(field)
+            "field":marc_utils.field_as_string(field),
+            "replaced_by":marc_utils.field_as_string(replaced_by)
             })
 
     def close(self):
@@ -264,7 +265,7 @@ def dedupe_field(record:pymarc.record.Record, tag:str, index:int=None, bibnb:int
                 LOG.record_message(Level.INFO, index, bibnb, msg=f"Replacing preferred field for authority ID {auth_id} from {marc_utils.field_as_string(auth_id_index[auth_id].old_field)} to {marc_utils.field_as_string(auth_id_index[auth_id].current_field)}")
             # Log an info + report
             LOG.record_message(Level.INFO, index, bibnb, msg=f"Deduping on authority ID {auth_id} : {marc_utils.field_as_string(deleted_field)}")
-            DELETED_FIELD_FILE.write(bibnb, index, tag, auth_id, deleted_field)
+            DELETED_FIELD_FILE.write(bibnb, index, tag, auth_id, deleted_field, auth_id_index[auth_id].current_field)
             continue
     
     # Once loop is over, for each defined auth_id, add the corretc field

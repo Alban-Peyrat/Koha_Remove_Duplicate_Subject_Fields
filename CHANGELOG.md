@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2025-12-10
+
+### Added
+
+* Deleted fields now include a `replaced_by` column containing the field that was used instead
+
 ### Changed
 
 * Changed behaviour when encountering a field sharing the same ID as a stored field :
@@ -22,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 * `prep_list.py` now properly deals with Koha's CSV BOM
 * `prep_list.py` no longer outputs headers as the main script does not expect headers
+* Deleted fields are now properly exported using the same format as in logs
 
 ## [1.0.2] - 2025-10-01
 

@@ -60,7 +60,13 @@ For `prep_list.py` :
 
 ### Effects of the script
 
+_Note : the strogin field process in the following flowchart is outdated, see the 2nd flowchart for the updated version_
+
 ![Flowchart of the script](./img/flowchart.png)
+
+**Storing the field**
+
+![Flowchart of storing the field](./img/KRDS_keeping_field.png)
 
 ### Output files
 
@@ -75,19 +81,21 @@ _Note : all CSV files use `;` as separator._
 * `tag` : tag of the deleted field
 * `auth_id` : authority ID of the deleted field
 * `field` : the entire field as a string
+* `replaced_by` : the entire field used as a replacement as a string
 
 `KRSD_deleted_fields.csv` contains all errors or unexpected situation, with columns :
 
 * `error_type` : the error type
-  * `REQUESTS_GET_ERROR` : an error happenned while trying to retrieve the record. The message will have the name of the error
-  * `SECURITY_STOP` : the maximum number of records was reached
+  * `AUTH_ID_HAS_NO_CURRENT_FIELD` : the internal element used to store fields does not have a field for this authority ID
   * `BIBNB_IS_INCORRECT` : biblionumber is incorrect (not a positive integer)
-  * `NO_RECORD` : record is empty / invalid
-  * `NO_BIBNB_IN_RECORD` : record does not have a `001` (as those are records retrieved from Koha, all should have one)
   * `FAILED_TO_PARSE_MARC` : failed to parse the record
-  * `WARNING_FIELD_WITHOUT_AUTHORITY_ID` : warning (not an error), one of the analysed field did not have authority ID
+  * `NO_BIBNB_IN_RECORD` : record does not have a `001` (as those are records retrieved from Koha, all should have one)
+  * `NO_RECORD` : record is empty / invalid
   * `RECORD_WAS_NOT_CHANGED` : the record did not change (as the script should only be used on records that should change)
+  * `REQUESTS_GET_ERROR` : an error happenned while trying to retrieve the record. The message will have the name of the error
+  * `WARNING_FIELD_WITHOUT_AUTHORITY_ID` : warning (not an error), one of the analysed field did not have authority ID
   * `WARNING_MULTIPLE_AUTHORITY_ID_IN_ONE_FIELD` : warning (not an error), one of the analysed field had multiple autority ID
+  * `SECURITY_STOP` : the maximum number of records was reached
 * `index` : index of the record in the input file
 * `bibnb` : biblinoumber of the record
 * `message` : aditional message if necessary, errors (or warnings) on specific fields usually have the entire field as a string
