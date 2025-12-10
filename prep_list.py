@@ -14,11 +14,7 @@ FILE_OUT = os.getenv("PREP_LIST_OUTPUT_FILE")
 
 class Bibnb(object):
     def __init__(self, row:dict) -> None:
-        # typical "It worked but now Koha updated and some obscure stuff is happening now" situation
-        if not "biblionumber" in row:
-            self.bibnb:str = row["\ufeffbiblionumber"]
-        else:
-            self.bibnb:str = row["biblionumber"]
+        self.bibnb:str = row["biblionumber"]
         self.input_ids:str = row["subfield"]
         self.id_list = self.input_ids.split()
         self.id_dict = {}
@@ -49,7 +45,8 @@ class Bibnb(object):
 
 output = []
 # Open input file
-with open(FILE_IN, "r", encoding="utf-8") as f:
+# Since Koha 24.11 BZ33635 CSV exports include BOM, so use utf-8-sig
+with open(FILE_IN, "r", encoding="utf-8-sig") as f:
     reader = csv.DictReader(f, delimiter=";")
 
     # For each line
@@ -64,5 +61,4 @@ with open(FILE_IN, "r", encoding="utf-8") as f:
 with open(FILE_OUT, "w", encoding='utf-8', newline="") as f:
     headers = ["biblinoumber"]
     writer = csv.DictWriter(f, fieldnames=headers)
-    writer.writeheader()
     writer.writerows(output)
