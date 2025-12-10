@@ -7,7 +7,7 @@ import os
 import dotenv
 import csv
 from typing import Dict, List
-from enum import Enum
+from enum import Enum, IntEnum
 import pymarc
 
 # Internal imports
@@ -63,7 +63,12 @@ class Error_Types(Enum):
     RECORD_WAS_NOT_CHANGED = 31
     WARNING_MULTIPLE_AUTHORITY_ID_IN_ONE_FIELD = 32
     AUTH_ID_HAS_NO_CURRENT_FIELD = 33
-    
+
+class AlphaScript_Priority(IntEnum):
+    NONE = 0
+    MID = 5
+    TOP = 10
+
 # ----------------- Classes definition -----------------
 class Error_File(object):
     def __init__(self, file_path:str) -> None:
@@ -146,10 +151,26 @@ class Preferred_Field(object):
                 # If new field is closer to the perfect match, replace it
                 if abs(len(field.get_subfields("9")) - len(field.get_subfields("3"))) < abs(self.nb_koha_id - self.nb_ppn):
                     self.__replace_current_field(field)
-                    return True       
-        
-        # PPN have priotity so after it
-        # Keep $7='ba0yba0y' > $7='ba' > other / none
+                    return True
+                
+                # If the difference bewten nb of PPN & nb of Koha ID is the
+                # same between both check for $7 Alphabet/Script priority
+                elif abs(len(field.get_subfields("9")) - len(field.get_subfields("3"))) == abs(self.nb_koha_id - self.nb_ppn):
+                    if self.__new_field_has_alphascript_priority(field):
+                        self.__replace_current_field(field)
+                        return True
+            # Current field has same nb of PPN as Koha ID, if new field
+            # is in the same situation, check for $7 Alphabet/Script priority 
+            if len(field.get_subfields("9")) == len(field.get_subfields("3")):
+                if self.__new_field_has_alphascript_priority(field):
+                    self.__replace_current_field(field)
+                    return True
+        # New field has no PPN, if current field also has no PPN :
+        # -> check for $7 Alphabet/Script priority 
+        if not self.has_ppn:
+            if self.__new_field_has_alphascript_priority(field):
+                self.__replace_current_field(field)
+                return True   
 
         # By default, return False
         return False
@@ -180,15 +201,35 @@ class Preferred_Field(object):
         """Returns if the number of PPN matches the number of IDs"""
         return self.nb_ppn == self.nb_koha_id
 
+    @property
+    def alphascript_priority(self) -> AlphaScript_Priority:
+        """Returns current field Alphabet/Script priority"""
+        if self.current_field == None:
+            return AlphaScript_Priority.NONE
+        return get_alphascript_priority(self.current_field)
+
     def __replace_current_field(self, field:pymarc.field.Field):
         self.old_field = self.current_field
         self.current_field = field
-
+    
+    def __new_field_has_alphascript_priority(self, field:pymarc.field.Field) -> bool:
+        return get_alphascript_priority(field) > self.alphascript_priority
 
 # ----------------- Functions definition -----------------
 def get_auth_id(field:pymarc.field.Field) -> str:
     """Returns the auth id of a field"""
     return "-".join(field.get_subfields("9"))
+
+def get_alphascript_priority(field:pymarc.field.Field) -> AlphaScript_Priority:
+    """Returns the field alphabet/Script Priority.
+    $7='ba0yba0y' > $7='ba' > $7=other / none"""
+    if len(field.get_subfields("7")) < 1:
+        return AlphaScript_Priority.NONE
+    if field.get_subfields("7")[0] == "ba0yba0y":
+        return AlphaScript_Priority.TOP
+    elif field.get_subfields("7")[0] == "ba":
+        return AlphaScript_Priority.MID
+    return AlphaScript_Priority.NONE
 
 def dedupe_field(record:pymarc.record.Record, tag:str, index:int=None, bibnb:int=None) -> bool:
     """Removes multiple occurence of fields sharing the same $9

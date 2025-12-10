@@ -8,10 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-* Changed behaviour when encountering a field sharing the sa ID as a stored field :
+* Changed behaviour when encountering a field sharing the same ID as a stored field :
   * If stored field has no PPN but the new field has PPNs, keeps the new field
-  * If both stored field & new field has PPN, keep the field the closest of having the same number of `$9` & `PPN`. If both have the same number, keep the first field
+  * If both stored field & new field has PPN, keep the field the closest of having the same number of `$9` & `PPN`. If both have the same number, keep the stored field
   * If neither has PPN, keep the stored field
+  * In all cases where the stored fielf is kept, unless the new field worse PPN situation, checks if alphabet / script for latin, with the following priority :
+      1. `$7` has value `ba0yba0y`
+      1. `$7` has value `ba`
+      1. `$7` has another value or no value
+  * ... if the new field has an higher priority than the stored one, keeps the new field
 
 ### Fixed
 
