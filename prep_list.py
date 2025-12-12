@@ -11,12 +11,14 @@ load_dotenv()
 
 FILE_IN = os.getenv("PREP_LIST_INPUT_FILE")
 FILE_OUT = os.getenv("PREP_LIST_OUTPUT_FILE")
+FIELD_SEPARATOR = os.getenv("PREP_LIST_FIELD_SEPARATOR")
 
 class Bibnb(object):
     def __init__(self, row:dict) -> None:
         self.bibnb:str = row["biblionumber"]
         self.input_ids:str = row["subfield"]
-        self.id_list = self.input_ids.split()
+        # Filter -> list removes empty elements
+        self.id_list = list(filter(None, self.input_ids.split(FIELD_SEPARATOR)))
         self.id_dict = {}
         self.analyse_input_ids()
 

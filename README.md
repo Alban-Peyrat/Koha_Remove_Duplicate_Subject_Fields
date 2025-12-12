@@ -7,22 +7,6 @@ This application is used to remove duplicate subject fields from MARC bibliograp
 An additional script (`prep_list.py`, a quickly repurposed `AR108_duplicates_subject_id`) filters the result of a SQL report merging in one column all the authority IDs, outputing the list of of biblionumber containing duplicates authorities ID.
 SQL report example :
 
-<!-- report ID 1500 -->
-
-<!-- 
-Pour les champs venant ud Sudoc, on peut exclure le snotices qui contiendrait des subdivisions
-WHERE ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="y"])')) = 0
-	AND ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="x"])')) = 0
-
- -->
-
-```SQL
-SELECT biblionumber,
-    ExtractValue(metadata, CONCAT('//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="', TRIM(<<Subfield Code>>), '"]')) AS subfield
-
-FROM biblio_metadata
-```
-
 ## Requirements
 
 * Uses `pymarc` 5.2.0
@@ -55,6 +39,7 @@ For `prep_list.py` :
 
 * `PREP_LIST_INPUT_FILE` : path to the file containing an extract of Koha data, needs columns `biblionumber` and `subfield` (see introduction for a report example)
 * `PREP_LIST_OUTPUT_FILE` : path to the output file
+* `PREP_LIST_FIELD_SEPARATOR` : separator between fields in `subfield`
 
 ## Script processing
 
@@ -99,3 +84,90 @@ _Note : all CSV files use `;` as separator._
 * `index` : index of the record in the input file
 * `bibnb` : biblinoumber of the record
 * `message` : aditional message if necessary, errors (or warnings) on specific fields usually have the entire field as a string
+
+## SQL examples for `prep_list.py`
+
+<!-- report ID 1500 -->
+
+<!-- 
+Pour les champs venant ud Sudoc, on peut exclure le snotices qui contiendrait des subdivisions
+WHERE ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="y"])')) = 0
+	AND ExtractValue(metadata, CONCAT('count(//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="x"])')) = 0
+
+ -->
+
+```SQL
+/* Simple, but will have false positives if multiples authority IDs can be present in the same field*/
+SELECT biblionumber,
+    ExtractValue(metadata, CONCAT('//datafield[@tag="',  TRIM(<<Field Tag>>), '"]/subfield[@code="', TRIM(<<Subfield Code>>), '"]')) AS subfield
+
+FROM biblio_metadata
+```
+
+<!-- report ID 1740 -->
+
+``` SQL
+/* If fields can have multiples authority IDs, */
+SELECT biblionumber,
+    TRIM(BOTH <<Field separator (pas < ou >) >> FROM REGEXP_REPLACE(
+        REGEXP_REPLACE(
+            REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                        REGEXP_REPLACE(
+                            REGEXP_REPLACE(
+                                REGEXP_REPLACE(
+                                    REGEXP_REPLACE(
+                                        REGEXP_REPLACE(
+                                            bm.metadata,
+                                            /* Replace \n by spaces */
+                                            "\n",
+                                            " "
+                                        ),
+                                        /* Clear white spaces between tags */
+                                        ">\\s*<",
+                                        "><"
+                                    ),
+                                    /* Remove all datafields with wrong tag */
+                                    CONCAT('<datafield tag="(?!', TRIM(<<Field Tag>>), ').*?<\/datafield>'),
+                                    ""
+                                ),
+                                /* Remove all non-datafield*/
+                                '.*?(<datafield.*<\/datafield>).*',
+                                "\\1"
+                            ),
+                            /* Remove all subfields with wrong tag */
+                            CONCAT('<subfield code="[^', TRIM("$" FROM TRIM(<<Subfield Code>>)), ']">.*?<\/subfield>'),
+                            ""
+                        ),
+                        /* Replaces subfields tags with infield separator */
+                        '<\/subfield><subfield code=".">',
+                        TRIM(<<Infield separator (pas < ou >) >>)
+                    ),
+                    /* Replaces datafield tags with field separator */
+                    '<\/datafield><datafield tag="\\d+" ind1="." ind2=".">',
+                    TRIM(<<Field separator (pas < ou >) >>)
+                ),
+                /* Removes all remaining tags*/
+                '<\/?.+?>',
+                ""
+            ),
+            /* Remove infield separator if multiples occurrences next to each other */
+            CONCAT(TRIM(<<Infield separator (pas < ou >) >>), "+"),
+            TRIM(<<Infield separator (pas < ou >) >>)
+        ),
+        /* Remove field separator if multiples occurrences next to each other */
+        CONCAT(TRIM(<<Field separator (pas < ou >) >>), "+"),
+        TRIM(<<Field separator (pas < ou >) >>)
+    )) as subfield
+FROM biblio_metadata bm
+WHERE ExtractValue(bm.metadata,
+        CONCAT(
+            '//datafield[@tag="',
+            TRIM(<<Field Tag>>),
+            '"]/subfield[@code="',
+            TRIM("$" FROM TRIM(<<Subfield Code>>)),
+            '"]'
+        )
+    ) != ""
+```

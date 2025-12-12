@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+* `prep_list.py` field separator is now an environment variable
+* Added a SQL example concatenating all authority IDs from the same field as one compound ID
+
+### Changed
+
+* Moved down SQL example for `prep_list.py`
+
+### Fixed
+
+* `prep_list.py` now ignores empty strings after splitting column _subfield_
+
 ## [1.1.0] - 2025-12-10
 
 ### Added
