@@ -2,10 +2,9 @@
 
 [![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
 
-This application is used to remove duplicate subject fields from MARC bibliographic records using Koha 23.11 REST APIs.
+This application is used to remove duplicate subject fields from MARC bibliographic records using Koha 23.11 REST APIs (works with 24.11).
 
-An additional script (`prep_list.py`, a quickly repurposed `AR108_duplicates_subject_id`) filters the result of a SQL report merging in one column all the authority IDs, outputing the list of of biblionumber containing duplicates authorities ID.
-SQL report example :
+An additional script (`prep_list.py`) filters the result of a SQL report merging in one column all the authority IDs, outputing the list of of biblionumber containing duplicates authorities ID.
 
 ## Requirements
 
@@ -45,7 +44,7 @@ For `prep_list.py` :
 
 ### Effects of the script
 
-_Note : the strogin field process in the following flowchart is outdated, see the 2nd flowchart for the updated version_
+_Note : the storing field process in the following flowchart is outdated, see the 2nd flowchart for the updated version_
 
 ![Flowchart of the script](./img/flowchart.png)
 
